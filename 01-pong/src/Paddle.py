@@ -14,12 +14,13 @@ import settings
 
 
 class Paddle:
-    def __init__(self, x: float, y: float, width: float, height: float) -> None:
+    def __init__(self, x: float, y: float, width: float, height: float, is_ai = False) -> None:
         self.x: float = x
         self.y: float = y
         self.width: float = width
         self.height: float = height
         self.vy: float = 0.0
+        self.is_ai = is_ai
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(round(self.x), round(self.y), self.width, self.height)

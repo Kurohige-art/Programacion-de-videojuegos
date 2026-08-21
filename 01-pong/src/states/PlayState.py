@@ -29,6 +29,29 @@ class PlayState(BaseState):
         pong.player2.update(dt)
         pong.ball.update(dt)
 
+        #ia para el jugador 2
+        if pong.player2.is_ai and pong.ball.vx > 0:
+            distance = (pong.ball.y + pong.ball.height * 0.5) - (pong.player2.y + pong.player2.height * 0.5)
+            limit = pong.player2.height / 3.0
+
+            pong.player2.vy = (
+                settings.PADDLE_SPEED if distance > limit
+                else -settings.PADDLE_SPEED if distance < -limit
+                else 0.0
+            )
+
+        #ia para el jugador 1
+        if pong.player1.is_ai and pong.ball.vx < 0:
+            distance = (pong.ball.y + pong.ball.height * 0.5) - (pong.player1.y + pong.player1.height * 0.5)
+            limit = pong.player1.height / 3.0
+
+            pong.player1.vy = (
+                settings.PADDLE_SPEED if distance > limit
+                else -settings.PADDLE_SPEED if distance < -limit
+                else 0.0
+            )
+
+        
         ball_rect = pong.ball.get_rect()
 
         if ball_rect.left > settings.VIRTUAL_WIDTH:
@@ -39,11 +62,11 @@ class PlayState(BaseState):
             self._score(scorer=2)
             return
 
-        if ball_rect.top <= 0:
+        if ball_rect.top <= 0 and pong.ball.vy < 0:
             settings.SOUNDS["wall_hit"].play()
             pong.ball.y = 0
             pong.ball.vy *= -1
-        elif ball_rect.bottom >= settings.VIRTUAL_HEIGHT:
+        elif ball_rect.bottom >= settings.VIRTUAL_HEIGHT  and pong.ball.vy > 0:
             settings.SOUNDS["wall_hit"].play()
             pong.ball.y = settings.VIRTUAL_HEIGHT - pong.ball.height
             pong.ball.vy *= -1
@@ -104,6 +127,9 @@ class PlayState(BaseState):
         pong = self.pong
 
         if input_id in ("p1_up", "p1_down"):
+            if pong.player1.is_ai:
+                return
+            
             if input_data.pressed:
                 pong.player1.vy = (
                     -settings.PADDLE_SPEED if input_id == "p1_up" else settings.PADDLE_SPEED
@@ -113,6 +139,9 @@ class PlayState(BaseState):
                 if pong.player1.vy == sign * settings.PADDLE_SPEED:
                     pong.player1.vy = 0
         elif input_id in ("p2_up", "p2_down"):
+            if pong.player2.is_ai:
+                return
+                
             if input_data.pressed:
                 pong.player2.vy = (
                     -settings.PADDLE_SPEED if input_id == "p2_up" else settings.PADDLE_SPEED

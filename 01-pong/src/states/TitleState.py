@@ -28,15 +28,61 @@ class TitleState(BaseState):
         render_table(surface, self.pong)
         render_text(
             surface,
-            "Press enter to start",
+            "Choose game mode",
             settings.FONTS["large"],
             settings.VIRTUAL_WIDTH / 2,
-            settings.VIRTUAL_HEIGHT / 2,
+            settings.VIRTUAL_HEIGHT / 2 - 40,
             settings.COLOR_WHITE,
             center=True,
         )
+        render_text(
+            surface,
+            "Press 1 to Human vs Human",
+            settings.FONTS["large"],
+            settings.VIRTUAL_WIDTH / 2,
+            settings.VIRTUAL_HEIGHT / 2 - 20,
+            settings.COLOR_WHITE,
+            center=True
+        )
+        render_text(surface,
+        "Press 2 to Human (Paddle left) vs IA",
+        settings.FONTS["options"],
+        settings.VIRTUAL_WIDTH / 2,
+        settings.VIRTUAL_HEIGHT / 2,
+        settings.COLOR_WHITE,
+        center=True
+        )
+        render_text(surface,
+        "Press 3 to IA vs HHuman (Paddle right)",
+        settings.FONTS["options"],
+        settings.VIRTUAL_WIDTH / 2,
+        settings.VIRTUAL_HEIGHT / 2 + 15,
+        settings.COLOR_WHITE,
+        center=True
+        )
+        render_text(surface,
+        "Press 4 to IA vs IA",
+        settings.FONTS["options"],
+        settings.VIRTUAL_WIDTH / 2,
+        settings.VIRTUAL_HEIGHT / 2 + 30,
+        settings.COLOR_WHITE,
+        center=True
+        )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
-        if input_id == "confirm" and input_data.pressed:
-            self.pong.serving_player = random.randint(1, 2)
-            self.state_machine.change("serve", pong=self.pong)
+        if input_id == "mode_1" and input_data.pressed:
+            self._start_game()
+        elif input_id == "mode_2" and input_data.pressed:
+            self.pong.player2.is_ai = True
+            self._start_game()
+        elif input_id == "mode_3" and input_data.pressed:
+            self.pong.player1.is_ai = True
+            self._start_game()
+        elif input_id == "mode_4" and input_data.pressed:
+            self.pong.player1.is_ai = True
+            self.pong.player2.is_ai = True
+            self._start_game()
+
+    def _start_game(self) -> None:
+        self.pong.serving_player = random.randint(1, 2)
+        self.state_machine.change("serve", pong=self.pong)

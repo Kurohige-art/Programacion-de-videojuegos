@@ -27,12 +27,14 @@ class Pong(Game):
             settings.PADDLE_Y_OFFSET,
             settings.PADDLE_WIDTH,
             settings.PADDLE_HEIGHT,
+            is_ai = False
         )
         self.player2 = Paddle(
             settings.VIRTUAL_WIDTH - settings.PADDLE_WIDTH - settings.PADDLE_X_OFFSET,
             settings.VIRTUAL_HEIGHT - settings.PADDLE_HEIGHT - settings.PADDLE_Y_OFFSET,
             settings.PADDLE_WIDTH,
             settings.PADDLE_HEIGHT,
+            is_ai = False
         )
         self.ball = Ball(
             settings.VIRTUAL_WIDTH / 2 - settings.BALL_SIZE / 2,
