@@ -22,6 +22,10 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "p1_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "p1_down")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "p2_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "p2_down")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_1, "mode_1")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_2, "mode_2")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_3, "mode_3")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_4, "mode_4")
 
 TITLE = "Pong"
 
@@ -56,6 +60,7 @@ SOUNDS = {
 FONTS = {
     "score": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "font.ttf", 32),
     "large": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "font.ttf", 16),
+    "options": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "font.ttf", 14),
 }
 
 COLOR_BACKGROUND = (0, 0, 0)

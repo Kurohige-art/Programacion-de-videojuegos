@@ -22,16 +22,20 @@ from src.World import World
 
 
 class PlayingState(BaseState):
-    def enter(self, world: Optional[World] = None) -> None:
-        self.world = world if world is not None else World()
+    def enter(self, **enter_params: dict) -> None:
+        self.world = enter_params.get("world")
+        if self.world is None:
+            self.world = World()
         self.world.reset(True)
-        self.bird = Bird(
-            settings.VIRTUAL_WIDTH / 2 - settings.BIRD_WIDTH / 2,
-            settings.VIRTUAL_HEIGHT / 2 - settings.BIRD_HEIGHT / 2,
-            settings.BIRD_WIDTH,
-            settings.BIRD_HEIGHT,
-        )
-        self.score = 0
+        self.bird = enter_params.get("bird")
+        if self.bird is None:
+            self.bird = Bird(
+                settings.VIRTUAL_WIDTH / 2 - settings.BIRD_WIDTH / 2,
+                settings.VIRTUAL_HEIGHT / 2 - settings.BIRD_HEIGHT / 2,
+                settings.BIRD_WIDTH,
+                settings.BIRD_HEIGHT,
+            )
+        self.score = enter_params.get("score", 0)
 
     def update(self, dt: float) -> None:
         self.bird.update(dt)
@@ -63,3 +67,10 @@ class PlayingState(BaseState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "jump" and input_data.pressed:
             self.bird.jump()
+        if input_id == "confirm" and input_data.pressed:
+            self.state_machine.change(
+                "pause",
+                bird=self.bird,
+                world=self.world,     
+                score=self.score,
+            )
