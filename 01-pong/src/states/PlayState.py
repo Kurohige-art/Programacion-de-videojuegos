@@ -29,29 +29,36 @@ class PlayState(BaseState):
         pong.player2.update(dt)
         pong.ball.update(dt)
 
-        #ia para el jugador 2
+        # AI for player 2
         if pong.player2.is_ai and pong.ball.vx > 0:
-            distance = (pong.ball.y + pong.ball.height * 0.5) - (pong.player2.y + pong.player2.height * 0.5)
+            distance = (pong.ball.y + pong.ball.height * 0.5) - (
+                pong.player2.y + pong.player2.height * 0.5
+            )
             limit = pong.player2.height / 3.0
 
             pong.player2.vy = (
-                settings.PADDLE_SPEED if distance > limit
-                else -settings.PADDLE_SPEED if distance < -limit
+                settings.PADDLE_SPEED
+                if distance > limit
+                else -settings.PADDLE_SPEED
+                if distance < -limit
                 else 0.0
             )
 
-        #ia para el jugador 1
+        # AI for player 1
         if pong.player1.is_ai and pong.ball.vx < 0:
-            distance = (pong.ball.y + pong.ball.height * 0.5) - (pong.player1.y + pong.player1.height * 0.5)
+            distance = (pong.ball.y + pong.ball.height * 0.5) - (
+                pong.player1.y + pong.player1.height * 0.5
+            )
             limit = pong.player1.height / 3.0
 
             pong.player1.vy = (
-                settings.PADDLE_SPEED if distance > limit
-                else -settings.PADDLE_SPEED if distance < -limit
+                settings.PADDLE_SPEED
+                if distance > limit
+                else -settings.PADDLE_SPEED
+                if distance < -limit
                 else 0.0
             )
 
-        
         ball_rect = pong.ball.get_rect()
 
         if ball_rect.left > settings.VIRTUAL_WIDTH:
@@ -66,7 +73,7 @@ class PlayState(BaseState):
             settings.SOUNDS["wall_hit"].play()
             pong.ball.y = 0
             pong.ball.vy *= -1
-        elif ball_rect.bottom >= settings.VIRTUAL_HEIGHT  and pong.ball.vy > 0:
+        elif ball_rect.bottom >= settings.VIRTUAL_HEIGHT and pong.ball.vy > 0:
             settings.SOUNDS["wall_hit"].play()
             pong.ball.y = settings.VIRTUAL_HEIGHT - pong.ball.height
             pong.ball.vy *= -1
@@ -109,7 +116,10 @@ class PlayState(BaseState):
             pong.player2_score += 1
             pong.serving_player = 1
 
-        if pong.player1_score == settings.MAX_POINTS or pong.player2_score == settings.MAX_POINTS:
+        if (
+            pong.player1_score == settings.MAX_POINTS
+            or pong.player2_score == settings.MAX_POINTS
+        ):
             pong.winning_player = scorer
             self.state_machine.change("done", pong=pong)
             return
@@ -129,10 +139,12 @@ class PlayState(BaseState):
         if input_id in ("p1_up", "p1_down"):
             if pong.player1.is_ai:
                 return
-            
+
             if input_data.pressed:
                 pong.player1.vy = (
-                    -settings.PADDLE_SPEED if input_id == "p1_up" else settings.PADDLE_SPEED
+                    -settings.PADDLE_SPEED
+                    if input_id == "p1_up"
+                    else settings.PADDLE_SPEED
                 )
             elif input_data.released:
                 sign = -1 if input_id == "p1_up" else 1
@@ -141,10 +153,12 @@ class PlayState(BaseState):
         elif input_id in ("p2_up", "p2_down"):
             if pong.player2.is_ai:
                 return
-                
+
             if input_data.pressed:
                 pong.player2.vy = (
-                    -settings.PADDLE_SPEED if input_id == "p2_up" else settings.PADDLE_SPEED
+                    -settings.PADDLE_SPEED
+                    if input_id == "p2_up"
+                    else settings.PADDLE_SPEED
                 )
             elif input_data.released:
                 sign = -1 if input_id == "p2_up" else 1
