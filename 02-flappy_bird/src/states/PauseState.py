@@ -1,6 +1,4 @@
 """
-Actividad 2 Ricardo Felzani Olmedillo
-
 Curso: ISPPV1 I2026
 
 """
