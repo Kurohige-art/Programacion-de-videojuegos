@@ -8,8 +8,6 @@ alejandro.j.mujic4@gmail.com
 This file contains the definition of the class PlayingState.
 """
 
-from typing import Optional
-
 import pygame
 
 from gale.input_handler import InputData
@@ -18,16 +16,21 @@ from gale.text import render_text
 
 import settings
 from src.Bird import Bird
+from src.Strategy import NormalModeStrategy, HardModeStrategy
 from src.World import World
 
 
 class PlayingState(BaseState):
     def enter(self, **enter_params: dict) -> None:
         self.world = enter_params.get("world")
+
         if self.world is None:
             self.world = World()
         self.world.reset(True)
         self.bird = enter_params.get("bird")
+        self.score = 0
+        self.mode = enter_params.get("mode", "normal")
+        
         if self.bird is None:
             self.bird = Bird(
                 settings.VIRTUAL_WIDTH / 2 - settings.BIRD_WIDTH / 2,
@@ -35,16 +38,34 @@ class PlayingState(BaseState):
                 settings.BIRD_WIDTH,
                 settings.BIRD_HEIGHT,
             )
+
+        self.world.bird = self.bird
+
+        # Dynamic selection
+        if self.mode == "hard":
+            self.strategy = HardModeStrategy()
+        else:
+            self.strategy = NormalModeStrategy()
+
         self.score = enter_params.get("score", 0)
 
     def update(self, dt: float) -> None:
         self.bird.update(dt)
-        self.world.update(dt)
+        self.strategy.update_bird(self.bird, dt)
 
-        if self.world.collides(self.bird.get_rect()):
+        self.world.update_with_strategy(dt, self.strategy)
+
+        if self.strategy.check_collisions(self.world, self.bird):
             settings.SOUNDS["explosion"].play()
             settings.SOUNDS["hurt"].play()
-            self.state_machine.change("count_down")
+            pygame.mixer.music.stop()
+            settings.SOUNDS["game_over"].play()
+            self.state_machine.change(
+                "game_over",
+                world=self.world,
+                bird=self.bird,
+                score=self.score,
+            )
             return
 
         if self.world.update_scored(self.bird.get_rect()):
@@ -53,6 +74,7 @@ class PlayingState(BaseState):
 
     def render(self, surface: pygame.Surface) -> None:
         self.world.render(surface)
+        self.strategy.render(surface)  # Render mode-specific objects
         self.bird.render(surface)
         render_text(
             surface,
@@ -63,14 +85,27 @@ class PlayingState(BaseState):
             settings.COLOR_WHITE,
             shadowed=True,
         )
+        
+        if self.mode == "hard":
+            render_text(
+                surface,
+                "MODE: HARD",
+                settings.FONTS["flappy"],
+                10,
+                settings.VIRTUAL_HEIGHT - 30,
+                settings.COLOR_RED,
+                shadowed=True,
+            )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        self.strategy.apply_input(self.bird, input_id, input_data)
         if input_id == "jump" and input_data.pressed:
             self.bird.jump()
         if input_id == "confirm" and input_data.pressed:
             self.state_machine.change(
                 "pause",
                 bird=self.bird,
-                world=self.world,     
+                world=self.world,
                 score=self.score,
+                mode=self.mode,
             )

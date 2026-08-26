@@ -5,7 +5,7 @@ Study Case: Flappy Bird
 Author: Alejandro Mujica
 alejandro.j.mujic4@gmail.com
 
-This file contains the definition of the class TitleScreenState.
+This file contains the definition of the class GameOverState.
 """
 
 import pygame
@@ -15,44 +15,47 @@ from gale.state import BaseState
 from gale.text import render_text
 
 import settings
-from src.World import World
 from src.Strategy import MenuStrategy
 
 
-class TitleScreenState(BaseState):
-    options = ["normal_mode", "hard_mode"]
+class GameOverState(BaseState):
+    options = ["Mode Menu", "Exit Game"]
 
-    def enter(self) -> None:
-        self.world = World()
-        self.menu_strategy = MenuStrategy()
+    def enter(self, **enter_params: dict) -> None:
+        self.world = enter_params["world"]
+        self.bird = enter_params["bird"]
+        self.score = enter_params.get("score", 0)
         self.selected_option = 0
+        self.menu_strategy = MenuStrategy()
 
     def update(self, dt: float) -> None:
         self.world.update_with_strategy(dt, self.menu_strategy)
 
     def render(self, surface: pygame.Surface) -> None:
-        self.world.render(surface)
+        self.world.render(surface, render_logs=False)
+
         render_text(
             surface,
-            "Flappy Bird",
+            "GAME OVER",
             settings.FONTS["flappy"],
-            settings.VIRTUAL_WIDTH / 2,
-            settings.VIRTUAL_HEIGHT / 3,
+            settings.VIRTUAL_WIDTH // 2,
+            settings.VIRTUAL_HEIGHT // 4,
             settings.COLOR_WHITE,
             center=True,
             shadowed=True,
         )
         render_text(
             surface,
-            "Menu",
+            f"Score: {self.score}",
             settings.FONTS["medium"],
-            settings.VIRTUAL_WIDTH / 2,
-            2 * settings.VIRTUAL_HEIGHT / 3 - 10,
+            settings.VIRTUAL_WIDTH // 2,
+            settings.VIRTUAL_HEIGHT // 2 - 20,
             settings.COLOR_WHITE,
             center=True,
             shadowed=True,
         )
 
+        start_y = settings.VIRTUAL_HEIGHT // 2 + 20
         for index, option in enumerate(self.options):
             color = (
                 (255, 255, 0)
@@ -61,18 +64,18 @@ class TitleScreenState(BaseState):
             )
             render_text(
                 surface,
-                option.replace("_", " ").title(),
+                option,
                 settings.FONTS["medium"],
-                settings.VIRTUAL_WIDTH / 2,
-                2 * settings.VIRTUAL_HEIGHT / 3 + 10 + index * 20,
+                settings.VIRTUAL_WIDTH // 2,
+                start_y + index * 30,
                 color,
                 center=True,
-                shadowed=True,
             )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:
             return
+
         if input_id == "down":
             settings.SOUNDS["selection"].play()
             self.selected_option = (self.selected_option + 1) % len(self.options)
@@ -81,6 +84,9 @@ class TitleScreenState(BaseState):
             self.selected_option = (self.selected_option - 1) % len(self.options)
         elif input_id == "confirm":
             if self.selected_option == 0:
-                self.state_machine.change("count_down", mode="normal")
+                settings.SOUNDS["game_over"].stop()
+                pygame.mixer.music.load(settings.BASE_DIR / "assets" / "sounds" / "marios_way.ogg")
+                pygame.mixer.music.play(loops=-1)
+                self.state_machine.change("title")
             else:
-                self.state_machine.change("count_down", mode="hard")
+                pygame.event.post(pygame.event.Event(pygame.QUIT))
