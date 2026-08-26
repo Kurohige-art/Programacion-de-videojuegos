@@ -19,10 +19,10 @@ from gale import input_handler
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RETURN, "confirm")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "jump")
-
-#New input actions for the game
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "down")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LEFT, "left")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RIGHT, "right")
 
 TITLE = "Flappy Bird"
 
@@ -61,9 +61,13 @@ BASE_DIR = Path(__file__).parent
 
 TEXTURES = {
     "bird": pygame.image.load(BASE_DIR / "assets" / "graphics" / "bird.png"),
-    "background": pygame.image.load(BASE_DIR / "assets" / "graphics" / "background.png"),
+    "background": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "background.png"
+    ),
     "ground": pygame.image.load(BASE_DIR / "assets" / "graphics" / "ground.png"),
     "log": pygame.image.load(BASE_DIR / "assets" / "graphics" / "log.png"),
+    "ghost": pygame.image.load(BASE_DIR / "assets" / "graphics" / "ghost.png"),
+    "skull": pygame.image.load(BASE_DIR / "assets" / "graphics" / "skull.png"),
 }
 # The top log of every pair is the same image, flipped upside down.
 TEXTURES["log_inverted"] = pygame.transform.flip(TEXTURES["log"], False, True)
@@ -73,13 +77,24 @@ SOUNDS = {
     "explosion": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "explosion.wav"),
     "hurt": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "hurt.wav"),
     "score": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "score.wav"),
+    "selection": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "selection.wav"),
+    "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "game_over.wav"),
+    "crash": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash.wav"),
+}
+
+SOUNDS_PATHS = {
+    "hell": BASE_DIR / "assets" / "sounds" / "hell.ogg",
 }
 
 pygame.mixer.music.load(BASE_DIR / "assets" / "sounds" / "marios_way.ogg")
 
 FONTS = {
-    "medium": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "font.ttf", MEDIUM_TEXT_SIZE),
-    "huge": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "font.ttf", HUGE_TEXT_SIZE),
+    "medium": pygame.font.Font(
+        BASE_DIR / "assets" / "fonts" / "font.ttf", MEDIUM_TEXT_SIZE
+    ),
+    "huge": pygame.font.Font(
+        BASE_DIR / "assets" / "fonts" / "font.ttf", HUGE_TEXT_SIZE
+    ),
     "flappy": pygame.font.Font(
         BASE_DIR / "assets" / "fonts" / "flappy.ttf", FLAPPY_TEXT_SIZE
     ),
@@ -87,3 +102,4 @@ FONTS = {
 
 COLOR_BACKGROUND = (0, 0, 0)
 COLOR_WHITE = (255, 255, 255)
+COLOR_RED = (255, 0, 0)
