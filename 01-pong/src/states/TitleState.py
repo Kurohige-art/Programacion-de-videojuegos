@@ -38,47 +38,51 @@ class TitleState(BaseState):
         render_text(
             surface,
             "Press 1 to Human vs Human",
-            settings.FONTS["large"],
+            settings.FONTS["options"],
             settings.VIRTUAL_WIDTH / 2,
-            settings.VIRTUAL_HEIGHT / 2 - 20,
+            settings.VIRTUAL_HEIGHT / 2 - 15,
             settings.COLOR_WHITE,
-            center=True
+            center=True,
         )
-        render_text(surface,
-        "Press 2 to Human (Paddle left) vs IA",
-        settings.FONTS["options"],
-        settings.VIRTUAL_WIDTH / 2,
-        settings.VIRTUAL_HEIGHT / 2,
-        settings.COLOR_WHITE,
-        center=True
+        render_text(
+            surface,
+            "Press 2 to Human (Paddle left) vs IA",
+            settings.FONTS["options"],
+            settings.VIRTUAL_WIDTH / 2,
+            settings.VIRTUAL_HEIGHT / 2,
+            settings.COLOR_WHITE,
+            center=True,
         )
-        render_text(surface,
-        "Press 3 to IA vs HHuman (Paddle right)",
-        settings.FONTS["options"],
-        settings.VIRTUAL_WIDTH / 2,
-        settings.VIRTUAL_HEIGHT / 2 + 15,
-        settings.COLOR_WHITE,
-        center=True
+        render_text(
+            surface,
+            "Press 3 to IA vs HHuman (Paddle right)",
+            settings.FONTS["options"],
+            settings.VIRTUAL_WIDTH / 2,
+            settings.VIRTUAL_HEIGHT / 2 + 15,
+            settings.COLOR_WHITE,
+            center=True,
         )
-        render_text(surface,
-        "Press 4 to IA vs IA",
-        settings.FONTS["options"],
-        settings.VIRTUAL_WIDTH / 2,
-        settings.VIRTUAL_HEIGHT / 2 + 30,
-        settings.COLOR_WHITE,
-        center=True
+        render_text(
+            surface,
+            "Press 4 to IA vs IA",
+            settings.FONTS["options"],
+            settings.VIRTUAL_WIDTH / 2,
+            settings.VIRTUAL_HEIGHT / 2 + 30,
+            settings.COLOR_WHITE,
+            center=True,
         )
 
+    # options to menu:
     def on_input(self, input_id: str, input_data: InputData) -> None:
-        if input_id == "mode_1" and input_data.pressed:
+        if input_id == "mode_1" and input_data.pressed: # 1: Human vs Human
             self._start_game()
-        elif input_id == "mode_2" and input_data.pressed:
+        elif input_id == "mode_2" and input_data.pressed: # 2: Human (Paddle left) vs IA
             self.pong.player2.is_ai = True
             self._start_game()
-        elif input_id == "mode_3" and input_data.pressed:
+        elif input_id == "mode_3" and input_data.pressed: # 3: IA vs Human (Paddle right)
             self.pong.player1.is_ai = True
             self._start_game()
-        elif input_id == "mode_4" and input_data.pressed:
+        elif input_id == "mode_4" and input_data.pressed: # 4: IA vs IA
             self.pong.player1.is_ai = True
             self.pong.player2.is_ai = True
             self._start_game()
