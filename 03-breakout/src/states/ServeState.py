@@ -23,9 +23,16 @@ class ServeState(BaseState):
     def enter(self, **params: dict) -> None:
         self.level = params["level"]
         self.paddle = params["paddle"]
-        self.paddle.x = settings.VIRTUAL_WIDTH // 2 - 32
+        self.captured = params.get("captured", False)
+        self.ball_offset_x = params.get("ball_offset_x", self.paddle.width // 2 - 4)
+        if not self.captured:
+            self.paddle.x = settings.VIRTUAL_WIDTH // 2 - 32
         self.paddle.y = settings.VIRTUAL_HEIGHT - 32
-        self.ball = Ball(self.paddle.x + self.paddle.width // 2 - 4, self.paddle.y - 8)
+        self.ball = params.get(
+            "ball", Ball(self.paddle.x + self.ball_offset_x, self.paddle.y - 8)
+        )
+        self.ball.vx = 0
+        self.ball.vy = 0
         self.brickset = params.get("brickset", create_level(self.level))
         self.score = params.get("score", 0)
         self.lives = params.get("lives", 3)
@@ -33,10 +40,38 @@ class ServeState(BaseState):
         self.points_to_next_live = params.get(
             "points_to_next_live", settings.LIVE_POINTS_BASE
         )
+        self.powerups = params.get("powerups", [])
+        self.catch_ball_timer = params.get("catch_ball_timer", 0.0)
+        self.cannons_active = params.get("cannons_active", False)
+        self.projectiles = params.get("projectiles", [])
 
     def update(self, dt: float) -> None:
         self.paddle.update(dt)
-        self.ball.x = self.paddle.x + self.paddle.width // 2 - 2
+        self.ball.x = self.paddle.x + self.ball_offset_x
+        self.ball.y = self.paddle.y - self.ball.height
+
+        if self.captured:
+            self.catch_ball_timer -= dt
+            if self.catch_ball_timer <= 0:
+                self._launch_ball()
+
+    def _launch_ball(self) -> None:
+        self.state_machine.change(
+            "play",
+            level=self.level,
+            score=self.score,
+            lives=self.lives,
+            paddle=self.paddle,
+            balls=[self.ball],
+            brickset=self.brickset,
+            points_to_next_live=self.points_to_next_live,
+            live_factor=self.live_factor,
+            powerups=self.powerups,
+            catch_ball_timer=0.0,
+            catch_ball_ready=False,
+            cannons_active=self.cannons_active,
+            projectiles=self.projectiles,
+        )
 
     def render(self, surface: pygame.Surface) -> None:
         heart_x = settings.VIRTUAL_WIDTH - 120
@@ -83,7 +118,7 @@ class ServeState(BaseState):
         )
         render_text(
             surface,
-            "Press Enter to serve!",
+            "Press Space to serve!" if self.captured else "Press Enter to serve!",
             settings.FONTS["medium"],
             settings.VIRTUAL_WIDTH // 2,
             settings.VIRTUAL_HEIGHT // 2,
@@ -92,18 +127,11 @@ class ServeState(BaseState):
         )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
-        if input_id == "enter" and input_data.pressed:
-            self.state_machine.change(
-                "play",
-                level=self.level,
-                score=self.score,
-                lives=self.lives,
-                paddle=self.paddle,
-                balls=[self.ball],
-                brickset=self.brickset,
-                points_to_next_live=self.points_to_next_live,
-                live_factor=self.live_factor,
-            )
+        if input_data.pressed and (
+            (not self.captured and input_id == "enter")
+            or (self.captured and input_id == "pause")
+        ):
+            self._launch_ball()
 
         if input_id == "move_left":
             if input_data.pressed:

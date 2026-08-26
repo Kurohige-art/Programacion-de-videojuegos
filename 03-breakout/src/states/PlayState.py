@@ -18,6 +18,7 @@ from gale.input_handler import InputData
 from gale.text import render_text
 
 import settings
+from src.Projectile import Projectile
 import src.powerups
 
 
@@ -36,6 +37,10 @@ class PlayState(BaseState):
             + settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
         )
         self.powerups = params.get("powerups", [])
+        self.catch_ball_timer = params.get("catch_ball_timer", 0.0)
+        self.catch_ball_ready = params.get("catch_ball_ready", False)
+        self.cannons_active = params.get("cannons_active", False)
+        self.projectiles = params.get("projectiles", [])
 
         if not params.get("resume", False):
             self.balls[0].vx = random.randint(-80, 80)
@@ -53,6 +58,32 @@ class PlayState(BaseState):
 
             # Check collision with the paddle
             if ball.collides(self.paddle):
+                if self.catch_ball_ready and self.catch_ball_timer > 0:
+                    self.catch_ball_ready = False
+                    ball.vx = 0
+                    ball.vy = 0
+                    ball_offset_x = ball.x - self.paddle.x
+                    ball.x = self.paddle.x + max(
+                        0, min(ball_offset_x, self.paddle.width - ball.width)
+                    )
+                    ball.y = self.paddle.y - ball.height
+                    self.state_machine.change(
+                        "serve",
+                        level=self.level,
+                        score=self.score,
+                        lives=self.lives,
+                        paddle=self.paddle,
+                        ball=ball,
+                        ball_offset_x=ball_offset_x,
+                        captured=True,
+                        brickset=self.brickset,
+                        points_to_next_live=self.points_to_next_live,
+                        live_factor=self.live_factor,
+                        powerups=self.powerups,
+                        catch_ball_timer=self.catch_ball_timer,
+                    )
+                    return
+
                 settings.SOUNDS["paddle_hit"].stop()
                 settings.SOUNDS["paddle_hit"].play()
                 ball.rebound(self.paddle)
@@ -86,11 +117,14 @@ class PlayState(BaseState):
                 )
                 self.paddle.inc_size()
 
-            # Chance to generate two more balls
-            if random.random() < 0.1:
+            # Chance to generate a power-up
+            if random.random() < 0.5:
                 r = brick.get_collision_rect()
+                powerup_name = random.choice(
+                    ("TwoMoreBall", "CatchBall", "CannonPowerUp", "ExtraLife")
+                )
                 self.powerups.append(
-                    self.powerups_abstract_factory.get_factory("TwoMoreBall").create(
+                    self.powerups_abstract_factory.get_factory(powerup_name).create(
                         r.centerx - 8, r.centery - 8
                     )
                 )
@@ -98,13 +132,45 @@ class PlayState(BaseState):
         # Removing all balls that are not in play
         self.balls = [ball for ball in self.balls if ball.active]
 
+        for projectile in self.projectiles:
+            projectile.update(dt)
+
+            if projectile.collides(self.brickset):
+                brick = self.brickset.get_colliding_brick(
+                    projectile.get_collision_rect()
+                )
+
+                if brick is not None:
+                    brick.hit()
+                    self.score += brick.score()
+                    projectile.active = False
+
+        self.projectiles = [
+            projectile for projectile in self.projectiles if projectile.active
+        ]
+
         self.brickset.update(dt)
+
+        if self.catch_ball_ready:
+            self.catch_ball_timer -= dt
+            if self.catch_ball_timer <= 0:
+                self.catch_ball_timer = 0
+                self.catch_ball_ready = False
 
         if not self.balls:
             self.lives -= 1
             if self.lives == 0:
                 self.state_machine.change("game_over", score=self.score)
             else:
+                for powerup in self.powerups:
+                    powerup.active = False
+                self.powerups.clear()
+                self.catch_ball_timer = 0.0
+                self.catch_ball_ready = False
+                self.cannons_active = False
+                for projectile in self.projectiles:
+                    projectile.active = False
+                self.projectiles.clear()
                 self.paddle.dec_size()
                 self.state_machine.change(
                     "serve",
@@ -115,6 +181,11 @@ class PlayState(BaseState):
                     brickset=self.brickset,
                     points_to_next_live=self.points_to_next_live,
                     live_factor=self.live_factor,
+                    powerups=self.powerups,
+                    catch_ball_timer=self.catch_ball_timer,
+                    catch_ball_ready=self.catch_ball_ready,
+                    cannons_active=self.cannons_active,
+                    projectiles=self.projectiles,
                 )
 
         # Update powerups
@@ -178,6 +249,26 @@ class PlayState(BaseState):
         for ball in self.balls:
             ball.render(surface)
 
+        if self.cannons_active:
+            pygame.draw.rect(
+                surface,
+                (255, 220, 80),
+                pygame.Rect(self.paddle.x + 2, self.paddle.y - 6, 6, 8),
+            )
+            pygame.draw.rect(
+                surface,
+                (255, 220, 80),
+                pygame.Rect(
+                    self.paddle.x + self.paddle.width - 8,
+                    self.paddle.y - 6,
+                    6,
+                    8,
+                ),
+            )
+
+        for projectile in self.projectiles:
+            projectile.render(surface)
+
         for powerup in self.powerups:
             powerup.render(surface)
 
@@ -192,6 +283,15 @@ class PlayState(BaseState):
                 self.paddle.vx = settings.PADDLE_SPEED
             elif input_data.released and self.paddle.vx > 0:
                 self.paddle.vx = 0
+        elif input_id == "fire_cannons" and input_data.pressed:
+            if self.cannons_active and not self.projectiles:
+                self.projectiles = [
+                    Projectile(self.paddle.x + 3, self.paddle.y - 8),
+                    Projectile(
+                        self.paddle.x + self.paddle.width - 7,
+                        self.paddle.y - 8,
+                    ),
+                ]
         elif input_id == "pause" and input_data.pressed:
             self.state_machine.change(
                 "pause",
@@ -204,4 +304,8 @@ class PlayState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 powerups=self.powerups,
+                catch_ball_timer=self.catch_ball_timer,
+                catch_ball_ready=self.catch_ball_ready,
+                cannons_active=self.cannons_active,
+                projectiles=self.projectiles,
             )
