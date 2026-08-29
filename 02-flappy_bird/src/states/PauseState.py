@@ -64,8 +64,8 @@ class PauseState(BaseState):
             (255, 255, 255),
             center=True,
         )
-        start_y = (settings.VIRTUAL_HEIGHT // 2) + 20
         
+        start_y = (settings.VIRTUAL_HEIGHT // 2) + 20
         for index, option in enumerate(self.options):
             color = (
                 (255, 255, 0)
