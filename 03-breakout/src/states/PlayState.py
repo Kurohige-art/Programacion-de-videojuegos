@@ -101,7 +101,7 @@ class PlayState(BaseState):
                 self.paddle.inc_size()
 
             # Chance to generate a power-up
-            if random.random() < 0.6:
+            if random.random() < 0.1:
                 r = brick.get_collision_rect()
                 powerup_name = random.choice(
                     ("CaptureBall", "ExtraLife", "TwoMoreBall", "Cannon")
