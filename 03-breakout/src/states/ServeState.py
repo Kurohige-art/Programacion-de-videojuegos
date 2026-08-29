@@ -23,10 +23,8 @@ class ServeState(BaseState):
     def enter(self, **params: dict) -> None:
         self.level = params["level"]
         self.paddle = params["paddle"]
-        self.captured = params.get("captured", False)
-        self.ball_offset_x = params.get("ball_offset_x", self.paddle.width // 2 - 4)
-        if not self.captured:
-            self.paddle.x = settings.VIRTUAL_WIDTH // 2 - 32
+        self.paddle.vx = 0
+        self.paddle.x = settings.VIRTUAL_WIDTH // 2 - 32
         self.paddle.y = settings.VIRTUAL_HEIGHT - 32
         self.ball = params.get(
             "ball", Ball(self.paddle.x + self.ball_offset_x, self.paddle.y - 8)

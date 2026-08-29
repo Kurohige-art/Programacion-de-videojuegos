@@ -83,3 +83,34 @@ def generate_powerups_frames() -> List[pygame.Rect]:
         frames.append(pygame.Rect(j * 16, y, 16, 16))
 
     return frames
+
+
+def generate_cannon_frames() -> dict:
+    cannon_width = 14
+    cannon_height = 16
+    missile_width = 28
+    missile_height = 8
+    missile_y = cannon_height + 2
+
+    cannons = []
+    for pair in range(4):
+        pair_x = pair * (cannon_width * 2)
+        # In each pair, the first sprite is the cannon on the right side of the
+        # paddle and the second one is on the left side.
+        cannons.append(pygame.Rect(pair_x + cannon_width, 0, cannon_width, cannon_height))
+        cannons.append(pygame.Rect(pair_x, 0, cannon_width, cannon_height))
+
+    missiles = [
+        pygame.Rect(x, missile_y, missile_width, missile_height)
+        for x in range(0, 4 * missile_width, missile_width)
+    ]
+
+    explosion_sizes = [(13, 13), (14, 14), (29, 27), (30, 28), (27, 27), (21, 22)]
+    explosion = []
+    x = 0
+    y = missile_y + missile_height + 2
+    for width, height in explosion_sizes:
+        explosion.append(pygame.Rect(x, y, width, height))
+        x += width
+
+    return {"cannons": cannons, "missile": missiles, "explosion": explosion}

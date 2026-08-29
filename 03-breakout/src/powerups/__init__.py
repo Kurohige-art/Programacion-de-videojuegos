@@ -9,9 +9,9 @@ This module contains all of the power ups.
 """
 
 from src.powerups.PowerUp import PowerUp
-from src.powerups.CatchBall import CatchBall
-from src.powerups.CannonPowerUp import CannonPowerUp
+from src.powerups.CaptureBall import CaptureBall
 from src.powerups.ExtraLife import ExtraLife
 from src.powerups.TwoMoreBall import TwoMoreBall
+from src.powerups.Cannon import Cannon
 
-(PowerUp, CatchBall, CannonPowerUp, ExtraLife, TwoMoreBall)
+(PowerUp, CaptureBall, ExtraLife, TwoMoreBall, Cannon)
