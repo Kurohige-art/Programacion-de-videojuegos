@@ -22,6 +22,7 @@ from src.utilities.frames import (
     generate_ball_frames,
     generate_brick_frames,
     generate_powerups_frames,
+    generate_cannon_frames,
 )
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
@@ -56,28 +57,27 @@ POWERUP_SPEED = 50
 BASE_DIR = Path(__file__).parent
 
 SOUNDS = {
-    "paddle_hit": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "paddle_hit.wav"),
-    "selected": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "selected.wav"),
-    "brick_hit_1": pygame.mixer.Sound(
-        BASE_DIR / "assets" / "sounds" / "brick_hit_1.wav"
-    ),
-    "brick_hit_2": pygame.mixer.Sound(
-        BASE_DIR / "assets" / "sounds" / "brick_hit_2.wav"
-    ),
-    "wall_hit": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "wall_hit.wav"),
-    "hurt": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "hurt.wav"),
-    "level_complete": pygame.mixer.Sound(
-        BASE_DIR / "assets" / "sounds" / "level_complete.wav"
-    ),
-    "high_score": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "high_score.wav"),
-    "life": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "life.wav"),
-    "grow_up": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "grow_up.wav"),
-    "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "pause.wav"),
+    "paddle_hit": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "paddle_hit.wav")),
+    "selected": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "selected.wav")),
+    "brick_hit_1": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "brick_hit_1.wav")),
+    "brick_hit_2": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "brick_hit_2.wav")),
+    "wall_hit": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "wall_hit.wav")),
+    "hurt": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "hurt.wav")),
+    "level_complete": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "level_complete.wav")),
+    "high_score": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "high_score.wav")),
+    "life": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "life.wav")),
+    "grow_up": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "grow_up.wav")),
+    "pause": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "pause.wav")),
+    "explosion": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "Explosion.wav")),
+    "extra_life": pygame.mixer.Sound(str(BASE_DIR / "assets" / "sounds" / "Extra_Life.wav")),
 }
 
 TEXTURES = {
     "background": pygame.image.load(
         BASE_DIR / "assets" / "graphics" / "background.png"
+    ),
+    "spritesheet_canon": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "_breakout.png"
     ),
     "spritesheet": pygame.image.load(BASE_DIR / "assets" / "graphics" / "breakout.png"),
     "hearts": pygame.image.load(BASE_DIR / "assets" / "graphics" / "hearts.png"),
@@ -91,6 +91,7 @@ FRAMES = {
     "hearts": generate_frames(TEXTURES["hearts"], 10, 9),
     "arrows": generate_frames(TEXTURES["arrows"], 24, 24),
     "powerups": generate_powerups_frames(),
+    "cannon": generate_cannon_frames(),
 }
 
 FONTS = {

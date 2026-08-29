@@ -1,7 +1,17 @@
+"""
+ISPPV1 2023
+Study Case: Breakout
+
+Author: Alejandro Mujica
+alejandro.j.mujic4@gmail.com
+
+This file contains the class to define the Pause state.
+"""
+
 import pygame
 
-from gale.state import BaseState
 from gale.input_handler import InputData
+from gale.state import BaseState
 from gale.text import render_text
 
 import settings
@@ -18,6 +28,8 @@ class PauseState(BaseState):
         self.live_factor = params["live_factor"]
         self.points_to_next_live = params["points_to_next_live"]
         self.powerups = params["powerups"]
+        self.capture_available = params.get("capture_available", False)
+        self.cannon_projectiles = params.get("cannon_projectiles", [])
         settings.SOUNDS["pause"].play()
 
     def render(self, surface: pygame.Surface) -> None:
@@ -52,6 +64,12 @@ class PauseState(BaseState):
         self.brickset.render(surface)
         self.paddle.render(surface)
 
+        for powerup in self.powerups:
+            powerup.render(surface)
+
+        for projectile in self.cannon_projectiles:
+            projectile.render(surface)
+
         render_text(
             surface,
             "Pause",
@@ -75,5 +93,7 @@ class PauseState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 powerups=self.powerups,
+                capture_available=self.capture_available,
+                cannon_projectiles=self.cannon_projectiles,
                 resume=True,
             )

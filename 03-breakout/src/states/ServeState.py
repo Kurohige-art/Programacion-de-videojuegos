@@ -23,6 +23,7 @@ class ServeState(BaseState):
     def enter(self, **params: dict) -> None:
         self.level = params["level"]
         self.paddle = params["paddle"]
+        self.paddle.vx = 0
         self.paddle.x = settings.VIRTUAL_WIDTH // 2 - 32
         self.paddle.y = settings.VIRTUAL_HEIGHT - 32
         self.ball = Ball(self.paddle.x + self.paddle.width // 2 - 4, self.paddle.y - 8)
