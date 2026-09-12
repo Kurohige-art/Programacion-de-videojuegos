@@ -26,6 +26,7 @@ class ServeState(BaseState):
         self.paddle.vx = 0
         self.paddle.x = settings.VIRTUAL_WIDTH // 2 - 32
         self.paddle.y = settings.VIRTUAL_HEIGHT - 32
+        self.ball_offset_x = self.paddle.width // 2 - 4
         self.ball = params.get(
             "ball", Ball(self.paddle.x + self.ball_offset_x, self.paddle.y - 8)
         )
@@ -40,8 +41,9 @@ class ServeState(BaseState):
         )
         self.powerups = params.get("powerups", [])
         self.catch_ball_timer = params.get("catch_ball_timer", 0.0)
+        self.captured = params.get("captured", False)
         self.cannons_active = params.get("cannons_active", False)
-        self.projectiles = params.get("projectiles", [])
+        self.cannon_projectiles = params.get("cannon_projectiles", [])
 
     def update(self, dt: float) -> None:
         self.paddle.update(dt)
@@ -68,7 +70,7 @@ class ServeState(BaseState):
             catch_ball_timer=0.0,
             catch_ball_ready=False,
             cannons_active=self.cannons_active,
-            projectiles=self.projectiles,
+            cannon_projectiles=self.cannon_projectiles,
         )
 
     def render(self, surface: pygame.Surface) -> None:
