@@ -58,6 +58,14 @@
               "type": "string",
               "value": "platform"
             }
+          ],
+          "animation": [
+            {"tileid": 1, "duration": 120},
+            {"tileid": 2, "duration": 120},
+            {"tileid": 3, "duration": 120},
+            {"tileid": 4, "duration": 120},
+            {"tileid": 5, "duration": 120},
+            {"tileid": 6, "duration": 120}
           ]
         },
         {
@@ -121,7 +129,84 @@
           ]
         }
       ]
-    }
+    },
+    {
+         "columns":7,
+         "firstgid":78,
+         "image":"../graphics/key.png",
+         "imageheight":21,
+         "imagewidth":127,
+         "margin":1,
+         "name":"key",
+         "spacing":0,
+         "tilecount":7,
+         "tileheight":16,
+         "tiles":[
+                {
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"collision",
+                         "type":"string",
+                         "value":"solid"
+                        }]
+                }, 
+                {
+                 "id":1,
+                 "properties":[
+                        {
+                         "name":"collision",
+                         "type":"string",
+                         "value":"solid"
+                        }]
+                }, 
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"frame_index",
+                         "type":"int",
+                         "value":62
+                        }]
+                }, 
+                {
+                 "id":3,
+                 "properties":[
+                        {
+                         "name":"frame_index",
+                         "type":"int",
+                         "value":62
+                        }]
+                }, 
+                {
+                 "id":4,
+                 "properties":[
+                        {
+                         "name":"frame_index",
+                         "type":"int",
+                         "value":62
+                        }]
+                }, 
+                {
+                 "id":5,
+                 "properties":[
+                        {
+                         "name":"frame_index",
+                         "type":"int",
+                         "value":62
+                        }]
+                }, 
+                {
+                 "id":6,
+                 "properties":[
+                        {
+                         "name":"frame_index",
+                         "type":"int",
+                         "value":62
+                        }]
+                }],
+         "tilewidth":16
+        }
   ],
   "layers": [
     {
@@ -1950,6 +2035,26 @@
             0,
             0,
             0
+          ]
+        }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "key_block",
+      "objects": [
+        {
+          "id": 24,
+          "name": "key_block",
+          "type": "key_block",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "properties": [
+            {"name": "tile_id", "type": "int", "value": 0},
+            {"name": "first_gid", "type": "int", "value": 78},
+            {"name": "activation_score", "type": "int", "value": 150}
           ]
         }
       ]

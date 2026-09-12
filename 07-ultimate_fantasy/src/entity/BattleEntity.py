@@ -37,6 +37,14 @@ class BattleEntity(Entity):
         self.magic: float = self.base_magic
 
         self.current_hp: float = self.hp
+        self.rest_time: float = definition.get("restTime", 1.0)
+        self.rest_timer: float = 0.0
+
+    def update_rest(self, dt: float) -> None:
+        self.rest_timer = max(0.0, self.rest_timer - dt)
+
+    def start_rest(self) -> None:
+        self.rest_timer = self.rest_time
 
     def damage(self, amount: float) -> None:
         self.current_hp -= amount
@@ -49,7 +57,9 @@ class BattleEntity(Entity):
             self.current_hp = min(self.hp, self.current_hp + amount)
 
     def compute_attack(self) -> int:
-        return math.floor(random.random() / 2 * self.attack + random.random() / 4 * self.magic)
+        return math.floor(
+            random.random() / 2 * self.attack + random.random() / 4 * self.magic
+        )
 
     def compute_defense(self) -> int:
         return math.floor(

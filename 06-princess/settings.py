@@ -25,6 +25,8 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "move_dow
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "sword")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RETURN, "enter")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_KP_ENTER, "enter")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "action_a")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_b, "action_b")
 
 TITLE = "The Legend of the Princess"
 
@@ -88,7 +90,47 @@ TEXTURES = {
     "character-pot-walk": pygame.image.load(
         BASE_DIR / "assets" / "graphics" / "character_pot_walk.png"
     ),
+    "character_arrow": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "character_arrow.png"
+    ),
+    "bow": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "bow.png"
+    ),
+    "arrow": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "arrow.png"
+    ),
+    "chest": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "chest.png"
+    ),
+    "boss": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "boss.png"
+    ),
+    "fire_ball": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "fire_ball.png"
+    ),
 }
+
+# Manual quads for character_arrow.png because the frames have variable sizes.
+_ARROW_CHAR_RECTS = [
+    pygame.Rect(0, 0, 16, 26),
+    pygame.Rect(20, 0, 22, 26),
+    pygame.Rect(46, 0, 22, 26),
+    pygame.Rect(72, 0, 22, 26),
+]
+
+# Exact rectangles for boss.png, which has ten frames with one-pixel spacing.
+_BOSS_RECTS = [
+    pygame.Rect(0, 0, 32, 36),
+    pygame.Rect(33, 0, 32, 36),
+    pygame.Rect(0, 37, 32, 36),
+    pygame.Rect(33, 37, 34, 36),
+    pygame.Rect(0, 74, 32, 36),
+    pygame.Rect(33, 74, 35, 36),
+    pygame.Rect(69, 74, 32, 36),
+    pygame.Rect(0, 111, 32, 36),
+    pygame.Rect(33, 111, 35, 36),
+    pygame.Rect(69, 111, 32, 36),
+]
 
 FRAMES = {
     "tiles": frames.generate_frames(TEXTURES["tiles"], 16, 16),
@@ -101,6 +143,10 @@ FRAMES = {
     "entities": frames.generate_frames(TEXTURES["entities"], 16, 16),
     "character-pot-lift": frames.generate_frames(TEXTURES["character-pot-lift"], 16, 32),
     "character-pot-walk": frames.generate_frames(TEXTURES["character-pot-walk"], 16, 32),
+    "chest": frames.generate_frames(TEXTURES["chest"], 16, 22),
+    "character_arrow": _ARROW_CHAR_RECTS,
+    "boss": _BOSS_RECTS,
+    "fire_ball": frames.generate_frames(TEXTURES["fire_ball"], 36, 16),
 }
 
 

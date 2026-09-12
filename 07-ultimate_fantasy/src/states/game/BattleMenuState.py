@@ -72,6 +72,8 @@ class BattleMenuState(BaseState):
         )
 
     def update(self, dt: float) -> None:
+        self.battle_state.update_timers(dt)
+
         for enemy in self.battle_state.enemies:
             if not enemy.dead:
                 enemy.update(dt)

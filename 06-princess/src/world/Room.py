@@ -21,6 +21,7 @@ from src.GameObject import GameObject
 from src.states.entity.EntityIdleState import EntityIdleState
 from src.states.entity.EntityWalkState import EntityWalkState
 from src.world.Doorway import Doorway
+from src.world.FireBallProjectile import FireBallProjectile
 
 _ENEMY_TYPES = ["skeleton", "slime", "bat", "ghost", "spider"]
 
@@ -72,20 +73,30 @@ def _doorway_opening_for(
     """
     for direction, zone in _DOORWAY_ZONES.items():
         if zone.colliderect(rect):
-            return doorways_by_direction[direction].get_collision_rect()
+            if direction in doorways_by_direction:
+                return doorways_by_direction[direction].get_collision_rect()
 
     return None
 
+class FloatingBow:
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+        self.visible = True
 
 class Room:
     def __init__(
         self,
         player: TypeVar("Player"),
         on_game_over: Callable[[], None],
+        is_boss_room: bool = False,
+        entry_direction: str = "bottom",
     ) -> None:
         # Reference to player for collisions, etc.
         self.player = player
         self.on_game_over = on_game_over
+        self.is_boss_room = is_boss_room
+        self.boss = None
 
         self.width = settings.MAP_WIDTH
         self.height = settings.MAP_HEIGHT
@@ -94,18 +105,28 @@ class Room:
         self._generate_walls_and_floors()
 
         self.entities: List[Entity] = []
-        self._generate_entities()
-
         self.objects: List[GameObject] = []
-        self._generate_objects()
 
-        # Doorways that lead to other dungeon rooms.
-        self.doorways = [
-            Doorway("top", False, self),
-            Doorway("bottom", False, self),
-            Doorway("left", False, self),
-            Doorway("right", False, self),
-        ]
+        if self.is_boss_room:
+            # Only the entrance doorway is active in the boss room.
+            self.doorways = [Doorway(entry_direction, False, self)]
+            from src.world.Boss import Boss
+
+            # Place the boss on the side opposite the entrance.
+            bx = settings.VIRTUAL_WIDTH / 2 - 16
+            by = settings.MAP_RENDER_OFFSET_Y + settings.TILE_SIZE * 2
+            self.boss = Boss(bx, by)
+        else:
+            self._generate_entities()
+            self._generate_objects()
+            # Doorways that lead to other dungeon rooms.
+            self.doorways = [
+                Doorway("top", False, self),
+                Doorway("bottom", False, self),
+                Doorway("left", False, self),
+                Doorway("right", False, self),
+            ]
+
         self._doorways_by_direction = {
             doorway.direction: doorway for doorway in self.doorways
         }
@@ -120,6 +141,8 @@ class Room:
         self.adjacent_offset_y = 0
 
         self.projectiles: List[Any] = []
+
+        self.floating_bow = None
 
     def update(self, dt: float) -> None:
         # Don't update anything if we are sliding to another room.
@@ -180,9 +203,82 @@ class Room:
                     break
 
                 if not entity.dead and projectile.collides(entity):
-                    entity.damage(1)
+                    entity.damage(entity.health)  # Damage equal to current health to ensure death
                     settings.SOUNDS["hit-enemy"].play()
                     projectile.dead = True
+
+            if projectile.dead:
+                self.projectiles.remove(projectile)
+
+        # Handle chest interaction and bow collection.
+        player = self.player
+        player_y = player.y + player.height / 2
+        player_height = player.height - player.height / 2
+        player_col = int((player.x + player.width / 2) // settings.TILE_SIZE)
+        player_row = int((player_y + player_height / 2) // settings.TILE_SIZE)
+
+        for obj in self.objects:
+            if obj.type == "chest":
+                obj_col = int((obj.x + obj.width / 2) // settings.TILE_SIZE)
+                obj_row = int((obj.y + obj.height / 2) // settings.TILE_SIZE)
+
+                # The player must stand below the chest and face upward.
+                adjacent = (player.direction == "up" and obj_col == player_col and obj_row == player_row - 1)
+
+                if adjacent:
+                    if obj.state == "closed":
+                        obj.state = "opening_2"
+                        from gale.timer import Timer
+
+                        Timer.after(0.1, lambda o=obj: setattr(o, 'state', 'opening_3'))
+                        Timer.after(0.2, lambda o=obj: setattr(o, 'state', 'opening_4'))
+
+                    elif obj.state == "opening_4" and player.held.get("action_a"):
+                        obj.state = "open"
+                        from gale.timer import Timer
+
+                        bow_w = settings.TEXTURES["bow"].get_width()
+                        bow_h = settings.TEXTURES["bow"].get_height()
+                        bx = obj.x + obj.width / 2 - bow_w / 2
+                        by = obj.y + obj.height / 2 - bow_h / 2
+
+                        self.floating_bow = FloatingBow(bx, by)
+
+                        Timer.tween(0.5, [
+                            (self.floating_bow, {"y": by - 32})
+                        ], on_finish=lambda: Timer.after(0.5, lambda:
+                        Timer.tween(0.4, [
+                            (self.floating_bow, {"x": self.player.x, "y": self.player.y})
+                        ], on_finish=lambda: [
+                            setattr(self.floating_bow, 'visible', False),
+                            setattr(self.player, 'has_bow', True)
+                        ])))
+
+        # Update the boss and resolve contact damage.
+        if self.boss and not self.boss.dead:
+            self.boss.update(dt, self)
+
+            if self.player.collides(self.boss) and not self.player.invulnerable:
+                settings.SOUNDS["hit-player"].play()
+                self.player.damage(2)
+                self.player.go_invulnerable(1.5)
+                if self.player.health <= 0:
+                    self.on_game_over()
+
+        # Update arrows and fireballs.
+        for projectile in list(self.projectiles):
+            projectile.update(dt)
+
+            if isinstance(projectile, FireBallProjectile):
+                if projectile.collides(self.player):
+                    projectile.dead = True
+                    self.player.damage(self.player.health)
+                    self.on_game_over()
+
+            elif self.boss and not self.boss.dead and projectile.collides(self.boss):
+                self.boss.hit_by_arrow(1)
+                settings.SOUNDS["hit-enemy"].play()
+                projectile.dead = True
 
             if projectile.dead:
                 self.projectiles.remove(projectile)
@@ -350,6 +446,48 @@ class Room:
                         GameObject(GAME_OBJECT_DEFS["pot"], x * 16, y * 16)
                     )
 
+        # Spawn at most one chest in the entire dungeon run.
+        dungeon_ref = getattr(self.player, "dungeon", None)
+        chest_exists = getattr(dungeon_ref, "chest_spawned_global", False) if dungeon_ref else False
+        has_bow = getattr(self.player, "has_bow", False)
+
+        if not chest_exists and not has_bow and random.randint(1, 4) == 1:
+            chest_spawned = False
+            attempts = 0
+            bottom_limit = (
+                settings.MAP_HEIGHT * settings.TILE_SIZE
+                + settings.MAP_RENDER_OFFSET_Y
+                - settings.TILE_SIZE
+            )
+            max_y_allowed = bottom_limit - 32 - 22
+
+            while not chest_spawned and attempts < 100:
+                attempts += 1
+                test_x = random.randint(
+                    settings.MAP_RENDER_OFFSET_X + settings.TILE_SIZE,
+                    settings.VIRTUAL_WIDTH - settings.TILE_SIZE * 2 - 16
+                )
+                test_y = random.randint(
+                    settings.MAP_RENDER_OFFSET_Y + settings.TILE_SIZE,
+                    int(max_y_allowed)
+                )
+
+                chest_rect = pygame.Rect(test_x, test_y, 16, 22)
+                overlapping = False
+
+                for obj in self.objects:
+                    if chest_rect.colliderect(obj.get_collision_rect()):
+                        overlapping = True
+                        break
+
+                if not overlapping:
+                    self.objects.append(
+                        GameObject(GAME_OBJECT_DEFS["chest"], test_x, test_y)
+                    )
+                    chest_spawned = True
+                    if hasattr(self.player, "dungeon"):
+                        self.player.dungeon.chest_spawned_global = True
+
     def render(
         self,
         surface: pygame.Surface,
@@ -408,3 +546,11 @@ class Room:
                 projectile.get_collision_rect(), self._doorways_by_direction
             ):
                 projectile.render(surface, camera_offset_x, camera_offset_y)
+        # Render the floating bow while it is visible.
+        if self.floating_bow and self.floating_bow.visible:
+            surface.blit(
+                settings.TEXTURES["bow"],
+                (self.floating_bow.x + offset_x, self.floating_bow.y + offset_y)
+            )
+        if self.boss and not self.boss.dead:
+            self.boss.render(surface, camera_offset_x, camera_offset_y)

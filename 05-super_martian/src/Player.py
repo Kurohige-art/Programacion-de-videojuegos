@@ -40,6 +40,23 @@ class Player(GameEntity):
         )
         self.score = 0
         self.coins_counter = {54: 0, 55: 0, 61: 0, 62: 0}
+        self.climbing = False
+        self.climb_direction = 0
+        self.ladder_top_locked = False
+        self.ladder_top_y = None
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        if input_id in ("move_left", "move_right", "jump") and input_data.pressed:
+            if input_id in ("move_left", "move_right"):
+                self.climbing = False
+            if input_id == "jump":
+                self.ladder_top_locked = False
+        if input_id in ("climb_up", "climb_down") and input_data.pressed:
+            self.ladder_top_locked = False
+            self.climbing = True
+            self.climb_direction = -1 if input_id == "climb_up" else 1
+            return
+        if input_id in ("climb_up", "climb_down") and input_data.released:
+            self.climb_direction = 0
+            return
         self.state_machine.on_input(input_id, input_data)

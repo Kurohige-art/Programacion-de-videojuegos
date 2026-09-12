@@ -28,7 +28,10 @@ class Player(Entity):
             "move_right": False,
             "move_up": False,
             "move_down": False,
+            "action_a": False,
+            "action_b": False,
         }
+        self.has_bow = False
 
     def collides(self, target: Any) -> bool:
         """
@@ -52,5 +55,4 @@ class Player(Entity):
                 self.held[input_id] = True
             elif input_data.released:
                 self.held[input_id] = False
-        else:
-            self.state_machine.on_input(input_id, input_data)
+        self.state_machine.on_input(input_id, input_data)

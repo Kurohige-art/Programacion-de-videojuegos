@@ -31,10 +31,15 @@ class Creature(GameEntity):
             definition["texture_id"],
             game_level,
             states={
-                state_name: lambda sm: state_class(self, sm)
+                state_name: lambda sm, state_class=state_class: state_class(self, sm)
                 for state_name, state_class in definition["states"].items()
             },
             animation_defs=definition["animation_defs"],
         )
         self.walk_speed = definition["walk_speed"]
+        self.flying = definition.get("flying", False)
         self.state_machine.change(definition["first_state"], self.flipped)
+
+    def stomp(self) -> None:
+        if not self.is_dead:
+            self.change_state("dead")

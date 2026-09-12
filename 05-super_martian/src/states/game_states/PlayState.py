@@ -22,6 +22,7 @@ import settings
 from src.Clock import Clock
 from src.GameLevel import GameLevel
 from src.Player import Player
+from src.GameItem import GameItem
 
 
 class PlayState(BaseState):
@@ -57,9 +58,14 @@ class PlayState(BaseState):
             self.camera.update(0)
 
         self.clock = enter_params.get("clock")
+        self.transition_radius = 0 if enter_params.get("transition_open") else None
+        self.transition_center = (
+            settings.VIRTUAL_WIDTH // 2,
+            settings.VIRTUAL_HEIGHT // 2,
+        )
 
         if self.clock is None:
-            self.clock = Clock(30)
+            self.clock = Clock(100)
 
             def countdown_timer():
                 self.clock.count_down()
@@ -75,12 +81,29 @@ class PlayState(BaseState):
             Timer.resume()
 
     def update(self, dt: float) -> None:
+        if self.transition_radius is not None:
+            self.transition_radius += 520 * dt
+            diagonal = (
+                settings.VIRTUAL_WIDTH**2 + settings.VIRTUAL_HEIGHT**2
+            ) ** 0.5
+            if self.transition_radius >= diagonal:
+                self.transition_radius = None
+
+        if self.game_level.update_key_block(self.player.score):
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            settings.SOUNDS["victory"].play()
+            Timer.clear()
+
         if self.player.is_dead:
             pygame.mixer.music.stop()
             pygame.mixer.music.unload()
+            settings.SOUNDS["victory"].stop()
             Timer.clear()
-            self.state_machine.change("game_over", self.player)
+            self.state_machine.change("game_over", self.player, self.level)
 
+        previous_player_y = self.player.y
+        previous_player_vy = self.player.vy
         self.player.update(dt)
 
         if self.player.y >= self.tilemap.pixel_height:
@@ -89,9 +112,32 @@ class PlayState(BaseState):
         self.camera.update(dt)
         self.game_level.update(dt)
 
+        if self.game_level.key is not None and self.player.collides(
+            self.game_level.key
+        ):
+            self.game_level.key = None
+            settings.SOUNDS["victory"].stop()
+            self.state_machine.change(
+                "level_transition",
+                level=self.level,
+                game_level=self.game_level,
+                player=self.player,
+                camera=self.camera,
+                clock=self.clock,
+            )
+            return
+
         for creature in self.game_level.creatures:
             if self.player.collides(creature):
-                self.player.change_state("dead")
+                falling_on_creature = (
+                    previous_player_vy > 0
+                    and previous_player_y + self.player.height <= creature.y + 4
+                )
+                if falling_on_creature:
+                    creature.stomp()
+                    self.player.vy = -settings.GRAVITY / 3
+                else:
+                    self.player.change_state("dead")
 
         for item in self.game_level.items:
             if not item.active or not item.collidable:
@@ -124,6 +170,17 @@ class PlayState(BaseState):
             (255, 255, 255),
             shadowed=True,
         )
+
+        if self.transition_radius is not None:
+            overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 255))
+            pygame.draw.circle(
+                overlay,
+                (0, 0, 0, 0),
+                self.transition_center,
+                max(0, int(self.transition_radius)),
+            )
+            surface.blit(overlay, (0, 0))
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "pause" and input_data.pressed:

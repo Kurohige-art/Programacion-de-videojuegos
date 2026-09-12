@@ -5,11 +5,9 @@ Study Case: Ultimate Fantasy (RPG)
 Author: Alejandro Mujica
 alejandro.j.mujic4@gmail.com
 
-This file contains the class TakeTurnState: drives one full round of
-battle -- every living party member acts (in slot order), then every
-living enemy acts (in list order, AI picking a uniformly random action
-among its own, guaranteed to hit a living target), repeating round after
-round until one side is wiped. Also handles the victory (EXP/level-up)
+This file contains the class TakeTurnState: selects the next living party
+member or enemy whose recovery timer has elapsed, resolves its action, and
+continues until one side is wiped. It also handles the victory (EXP/level-up)
 and defeat (game over) end-of-battle flows.
 """
 
@@ -28,44 +26,42 @@ import settings
 class TakeTurnState(BaseState):
     def enter(self, battle_state: Any) -> None:
         self.battle_state = battle_state
-        self.enemy_attacks_in_a_row = 0
-        self._take_party_turn(0)
+        self.waiting_for_action = False
 
     def _party_keys(self):
         return sorted(self.battle_state.party.characters.keys())
 
-    # -- party turns ---------------------------------------------------
-
-    def _take_party_turn(self, index: int) -> None:
-        keys = self._party_keys()
-
-        if index >= len(keys):
-            self._take_enemy_turn(0)
+    def _start_next_turn(self) -> None:
+        entity = self.battle_state.take_ready_entity()
+        if entity is None:
             return
 
-        character = self.battle_state.party.characters[keys[index]]
+        self.waiting_for_action = True
+        if entity in self.battle_state.party.characters.values():
+            self._show_party_turn(entity)
+        else:
+            self._take_enemy_turn(entity)
 
-        if character.dead:
-            self._take_party_turn(index + 1)
-            return
-
+    def _show_party_turn(self, character: Any) -> None:
         from src.states.game.BattleMessageState import BattleMessageState
 
         self.state_machine.push(
             BattleMessageState(self.state_machine),
             battle_state=self.battle_state,
             message=f"Turn for {character.name}! Select an action.",
-            on_close=lambda: self._prompt_action(character, index),
+            on_close=lambda: self._prompt_action(character),
         )
 
-    def _prompt_action(self, character: Any, index: int) -> None:
+    def _prompt_action(self, character: Any) -> None:
         from src.states.game.SelectActionState import SelectActionState
 
         def on_action_selected() -> None:
             if all(enemy.dead for enemy in self.battle_state.enemies):
+                self.battle_state.finish_entity_turn(character)
+                self.waiting_for_action = False
                 self._victory()
             else:
-                self._take_party_turn(index + 1)
+                self._show_charging(character)
 
         self.state_machine.push(
             SelectActionState(self.state_machine),
@@ -74,22 +70,7 @@ class TakeTurnState(BaseState):
             on_action_selected=on_action_selected,
         )
 
-    # -- enemy turns ----------------------------------------------------
-
-    def _take_enemy_turn(self, index: int) -> None:
-        enemies = self.battle_state.enemies
-
-        if index >= len(enemies):
-            self._take_party_turn(0)
-            return
-
-        enemy = enemies[index]
-
-        if enemy.dead:
-            self._take_enemy_turn(index + 1)
-            return
-
-        self.enemy_attacks_in_a_row += 1
+    def _take_enemy_turn(self, enemy: Any) -> None:
         action = random.choice(enemy.actions)
 
         if action["target_type"] == "enemy":
@@ -126,15 +107,7 @@ class TakeTurnState(BaseState):
         from src.states.game.BattleMessageState import BattleMessageState
 
         def on_message_close() -> None:
-            if (
-                self.enemy_attacks_in_a_row < 3
-                and enemy.klass == "boss"
-                and random.randint(1, 3) == 1
-            ):
-                self._take_enemy_turn(index)
-            else:
-                self.enemy_attacks_in_a_row = 0
-                self._take_enemy_turn(index + 1)
+            self._show_charging(enemy)
 
         self.state_machine.push(
             BattleMessageState(self.state_machine),
@@ -142,6 +115,26 @@ class TakeTurnState(BaseState):
             message=message,
             on_close=on_message_close,
         )
+
+    def _show_charging(self, entity: Any) -> None:
+        from src.states.game.ChargingEnergyState import ChargingEnergyState
+
+        entity.start_rest()
+        self.state_machine.push(
+            ChargingEnergyState(self.state_machine),
+            battle_state=self.battle_state,
+            entity=entity,
+            on_complete=self._finish_charging,
+        )
+
+    def _finish_charging(self, entity: Any) -> None:
+        self.battle_state.finish_entity_turn(entity)
+        self.waiting_for_action = False
+
+    def update(self, dt: float) -> None:
+        self.battle_state.update_timers(dt)
+        if not self.waiting_for_action:
+            self._start_next_turn()
 
     # -- victory / experience --------------------------------------------
 
