@@ -40,6 +40,9 @@ class PlayState(BaseState):
         self.captured_ball = params.get("captured_ball")
         self.capture_timer = params.get("capture_timer", 0)
         self.capture_x_offset = params.get("capture_x_offset", 0)
+        self.catch_ball_timer = params.get("catch_ball_timer", 0.0)
+        self.catch_ball_ready = params.get("catch_ball_ready", False)
+        self.cannons_active = params.get("cannons_active", False)
         self.cannon_projectiles = params.get("cannon_projectiles", [])
 
         if not params.get("resume", False):
