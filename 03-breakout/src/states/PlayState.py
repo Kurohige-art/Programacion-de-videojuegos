@@ -18,7 +18,6 @@ from gale.input_handler import InputData
 from gale.text import render_text
 
 import settings
-from src.Projectile import Projectile
 import src.powerups
 
 
@@ -121,23 +120,6 @@ class PlayState(BaseState):
         # Removing all balls that are not in play
         self.balls = [ball for ball in self.balls if ball.active]
 
-        for projectile in self.projectiles:
-            projectile.update(dt)
-
-            if projectile.collides(self.brickset):
-                brick = self.brickset.get_colliding_brick(
-                    projectile.get_collision_rect()
-                )
-
-                if brick is not None:
-                    brick.hit()
-                    self.score += brick.score()
-                    projectile.active = False
-
-        self.projectiles = [
-            projectile for projectile in self.projectiles if projectile.active
-        ]
-
         self.brickset.update(dt)
 
         for projectile in self.cannon_projectiles:
@@ -167,9 +149,6 @@ class PlayState(BaseState):
                 self.catch_ball_timer = 0.0
                 self.catch_ball_ready = False
                 self.cannons_active = False
-                for projectile in self.projectiles:
-                    projectile.active = False
-                self.projectiles.clear()
                 self.paddle.dec_size()
                 self.state_machine.change(
                     "serve",
@@ -184,7 +163,7 @@ class PlayState(BaseState):
                     catch_ball_timer=self.catch_ball_timer,
                     catch_ball_ready=self.catch_ball_ready,
                     cannons_active=self.cannons_active,
-                    projectiles=self.projectiles,
+                    cannon_projectiles=self.cannon_projectiles,
                 )
 
         # Update powerups
@@ -270,9 +249,6 @@ class PlayState(BaseState):
                 ),
             )
 
-        for projectile in self.projectiles:
-            projectile.render(surface)
-
         for powerup in self.powerups:
             powerup.render(surface)
 
@@ -291,14 +267,9 @@ class PlayState(BaseState):
             elif input_data.released and self.paddle.vx > 0:
                 self.paddle.vx = 0
         elif input_id == "fire_cannons" and input_data.pressed:
-            if self.cannons_active and not self.projectiles:
-                self.projectiles = [
-                    Projectile(self.paddle.x + 3, self.paddle.y - 8),
-                    Projectile(
-                        self.paddle.x + self.paddle.width - 7,
-                        self.paddle.y - 8,
-                    ),
-                ]
+            for powerup in self.powerups:
+                if hasattr(powerup, "fire"):
+                    powerup.fire(self)
         elif input_id == "pause" and input_data.pressed:
             if self.captured_ball is not None:
                 self.launch_captured_ball()
