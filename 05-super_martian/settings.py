@@ -5,9 +5,8 @@ Study Case: Super Martian (Platformer)
 Author: Alejandro Mujica
 alejandro.j.mujic4@gmail.com
 
-This file contains the game settings that include the association of the
-inputs with an their ids, constants of values to set up the game, sounds,
-textures, frames, and fonts.
+This file contains the game settings, including input mappings, constants,
+sounds, textures, frames, and fonts.
 """
 
 import pathlib
@@ -26,6 +25,8 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "move_right"
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LEFT, "move_left")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "move_left")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "jump")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "climb_up")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "climb_down")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "jump")
 
 TITLE = "Super Martian"
@@ -35,16 +36,17 @@ VIRTUAL_WIDTH = 400
 VIRTUAL_HEIGHT = 192
 
 # Size of our actual window
-WINDOW_WIDTH = VIRTUAL_WIDTH * 4
-WINDOW_HEIGHT = VIRTUAL_HEIGHT * 4
+WINDOW_WIDTH = VIRTUAL_WIDTH * 3
+WINDOW_HEIGHT = VIRTUAL_HEIGHT * 3
 
 PLAYER_SPEED = 80
+PLAYER_CLIMB_SPEED = 60
 
 GRAVITY = 980
 
 CAMERA_FOLLOW_RATE = 8.0
 
-NUM_LEVELS = 1
+NUM_LEVELS = 2
 
 BASE_DIR = pathlib.Path(__file__).parent
 
@@ -57,12 +59,16 @@ TEXTURES = {
     "tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "tileset.png"),
     "martian": pygame.image.load(BASE_DIR / "assets" / "graphics" / "martian.png"),
     "creatures": pygame.image.load(BASE_DIR / "assets" / "graphics" / "creatures.png"),
+    "key": pygame.image.load(BASE_DIR / "assets" / "graphics" / "key.png"),
 }
 
 FRAMES = {
     "tiles": frames.generate_frames(TEXTURES["tiles"], 16, 16),
     "martian": frames.generate_frames(TEXTURES["martian"], 16, 20),
     "creatures": frames.generate_frames(TEXTURES["creatures"], 16, 16),
+    "key": frames.generate_frames(
+        TEXTURES["key"], 16, 16, margin=1, spacing=2
+    ),
 }
 
 SOUNDS = {
@@ -72,6 +78,7 @@ SOUNDS = {
     "jump": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "jump.wav"),
     "timer": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "timer.wav"),
     "count": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "count.wav"),
+    "victory": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "victory.ogg"),
 }
 
 SOUNDS["pickup_coin"].set_volume(0.5)

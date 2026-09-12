@@ -46,6 +46,22 @@ GAME_OBJECT_DEFS: Dict[str, Dict[str, Any]] = {
             "default": {"frame": 16},
         },
     },
+    "chest": {
+        "type": "chest",
+        "texture": "chest",
+        "frame": 1,
+        "width": 16,
+        "height": 22,
+        "solid": True,
+        "default_state": "closed",
+        "states": {
+            "closed": {"frame": 1},
+            "opening_2": {"frame": 2},
+            "opening_3": {"frame": 3},
+            "opening_4": {"frame": 4},
+            "open": {"frame": 5},
+        },
+    },
     # Definition of heart as a consumable object type.
     "heart": {
         "type": "heart",

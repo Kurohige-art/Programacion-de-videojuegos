@@ -90,6 +90,8 @@ class SelectActionState(BaseState):
         self.on_action_selected()
 
     def update(self, dt: float) -> None:
+        self.battle_state.update_timers(dt)
+
         for enemy in self.battle_state.enemies:
             if not enemy.dead:
                 enemy.update(dt)

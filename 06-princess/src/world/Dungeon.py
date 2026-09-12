@@ -9,6 +9,7 @@ This file contains the class Dungeon.
 """
 
 import math
+import random
 from typing import Callable, TypeVar
 
 import pygame
@@ -40,6 +41,9 @@ class Dungeon:
         self.camera_y = 0
         self.shifting = False
 
+        # Track the chest globally so only one can spawn during a run.
+        self.chest_spawned_global = False
+
     def begin_shifting(self, shift_x: float, shift_y: float) -> None:
         """
         Prepares for the camera shifting process, kicking off a tween of the
@@ -47,7 +51,31 @@ class Dungeon:
         PlayerWalkState/PlayerPotWalkState.
         """
         self.shifting = True
-        self.next_room = Room(self.player, self.on_game_over)
+
+        # After the bow is collected, give the next rooms a chance to be the
+        # boss room.
+        has_bow = getattr(self.player, "has_bow", False)
+        is_boss = False
+        if has_bow and not getattr(self, "boss_room_created", False):
+            if random.randint(1, 3) == 1:
+                is_boss = True
+                self.boss_room_created = True
+
+        entry_dir = (
+            "bottom"
+            if shift_y < 0
+            else "top"
+            if shift_y > 0
+            else "right"
+            if shift_x < 0
+            else "left"
+        )
+        self.next_room = Room(
+            self.player,
+            self.on_game_over,
+            is_boss_room=is_boss,
+            entry_direction=entry_dir,
+        )
 
         # Start all doors in next room as open until we get in.
         for doorway in self.next_room.doorways:

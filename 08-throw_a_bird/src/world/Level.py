@@ -249,6 +249,7 @@ class Level:
         elif other.user_data == "wind":
             return
         elif hasattr(other.user_data, "mass"):
+            # Every bird has a mass, so split birds deal damage automatically.
             entity.on_collision(other, is_ground=False)
 
     def render(self, surface: pygame.Surface, camera) -> None:

@@ -64,9 +64,15 @@ class PlayerSwingSwordState(BaseEntityState):
         self.entity.current_animation.reset()
 
     def update(self, dt: float) -> None:
-        for entity in self.dungeon.current_room.entities:
+        room = self.dungeon.current_room
+        for entity in room.entities:
             if entity.collides(self.sword_hitbox):
                 entity.damage(1)
+                settings.SOUNDS["hit-enemy"].play()
+
+        # Check for sword hits against the boss.
+        if room.boss and not room.boss.dead and room.boss.collides(self.sword_hitbox):
+            if room.boss.hit_by_sword(1):
                 settings.SOUNDS["hit-enemy"].play()
 
         if self.entity.current_animation.times_played > 0:

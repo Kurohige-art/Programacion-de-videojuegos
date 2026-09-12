@@ -43,6 +43,8 @@ class PlayerIdleState(BaseEntityState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "sword" and input_data.pressed:
             self.entity.change_state("swing-sword")
+        elif input_id == "action_b" and input_data.pressed and getattr(self.entity, "has_bow", False):
+            self.entity.change_state("shoot-bow")
         elif input_id == "enter" and input_data.pressed:
             self.dungeon.current_room.take_adjacent_pot(self.entity)
 

@@ -22,6 +22,7 @@ import pygame
 from gale import input_handler
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "split")
 
 # The only input this game needs: the primary mouse button, used both to
 # aim (drag starting near the bird) and to pan the camera (drag starting
@@ -112,3 +113,13 @@ TEXTURES = {
 # than tiling a 1x1 image thousands of times, its color is sampled once
 # and used to fill a plain rect (see src/world/Level.py).
 GROUND_FILL_COLOR = _load("world", "ground1px.png").get_at((0, 0))
+
+pygame.mixer.init()
+
+SOUNDS = {
+    "stretch": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "stretch.wav"),
+    "launch": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "launch.wav"),
+    "impact": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "impact.wav"),
+}
+
+BACKGROUND_MUSIC = BASE_DIR / "assets" / "sounds" / "background_music.wav"

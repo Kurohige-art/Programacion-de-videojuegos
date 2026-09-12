@@ -45,6 +45,9 @@ class BattleState(BaseState):
         self.on_exit = on_exit
         self.final_boss = False
         self.battle_started = False
+        self.ready_entity = None
+        self.active_entity = None
+        self.turn_cursor = 0
 
         offset = (BATTLE_PADDLE["x"], BATTLE_PADDLE["y"])
         self.base_layer = TileMap(BATTLE_WIDTH, BATTLE_HEIGHT, offset=offset)
@@ -163,6 +166,8 @@ class BattleState(BaseState):
             )
 
     def update(self, dt: float) -> None:
+        self.update_timers(dt)
+
         if not self.battle_started:
             self.battle_started = True
             self._trigger_starting_dialogue()
@@ -170,6 +175,49 @@ class BattleState(BaseState):
         for enemy in self.enemies:
             if not enemy.dead:
                 enemy.update(dt)
+
+    def update_timers(self, dt: float) -> None:
+        entities = list(self.party.characters.values()) + self.enemies
+
+        for entity in entities:
+            if not entity.dead:
+                entity.update_rest(dt)
+
+        if self.active_entity is not None or self.ready_entity is not None:
+            return
+
+        ready_entities = [
+            entity for entity in entities if not entity.dead and entity.rest_timer <= 0
+        ]
+        if not ready_entities:
+            return
+
+        minimum_timer = min(entity.rest_timer for entity in ready_entities)
+        ready_entities = [
+            entity
+            for entity in ready_entities
+            if entity.rest_timer <= minimum_timer + 0.0001
+        ]
+
+        for offset in range(len(entities)):
+            index = (self.turn_cursor + offset) % len(entities)
+            if entities[index] in ready_entities:
+                self.ready_entity = entities[index]
+                break
+
+    def take_ready_entity(self):
+        entity = self.ready_entity
+        self.ready_entity = None
+        if entity is not None and not entity.dead:
+            self.active_entity = entity
+            entities = list(self.party.characters.values()) + self.enemies
+            self.turn_cursor = (entities.index(entity) + 1) % len(entities)
+            return entity
+        return None
+
+    def finish_entity_turn(self, entity: Any) -> None:
+        if self.active_entity is entity:
+            self.active_entity = None
 
     def _trigger_starting_dialogue(self) -> None:
         from src.states.game.BattleMenuState import BattleMenuState

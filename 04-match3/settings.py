@@ -15,6 +15,7 @@ from pathlib import Path
 import pygame
 
 from gale import input_handler
+from gale.frames import generate_frames
 
 from src.frames_utility import generate_tile_frames
 
@@ -24,6 +25,7 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RETURN, "enter"
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "down")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "click")
+input_handler.InputHandler.set_mouse_motion_action(None, "click_motion")
 
 TITLE = "Match 3"
 
@@ -52,10 +54,24 @@ TEXTURES = {
     "background": pygame.image.load(
         BASE_DIR / "assets" / "graphics" / "background.png"
     ),
+    "spritesheet_lightning": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "spritesheet_lightning.png"
+    ),
+    "spritesheet_bomb": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "spritesheet_bomb.png"
+    ),
     "tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "match3.png"),
+    "bomb": pygame.image.load(BASE_DIR / "assets" / "graphics" / "bomb.png"),
+    "lightning": pygame.image.load(BASE_DIR / "assets" / "graphics" / "lightning.png"),
 }
 
-FRAMES = {"tiles": generate_tile_frames(TEXTURES["tiles"])}
+FRAMES = {
+    "tiles": generate_tile_frames(TEXTURES["tiles"]),
+    "powerup_bomb": generate_frames(TEXTURES["spritesheet_bomb"], 32, 32),
+    "powerup_lightning": generate_frames(
+        TEXTURES["spritesheet_lightning"], 32, 32
+    ),
+}
 
 SOUNDS = {
     "clock": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "clock.wav"),
@@ -64,6 +80,8 @@ SOUNDS = {
     "match": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "match.wav"),
     "next-level": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "next-level.wav"),
     "select": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "select.wav"),
+    "bomb": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "bomb.wav"),
+    "lightning": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "lightning.wav"),
 }
 
 pygame.mixer.music.load(BASE_DIR / "assets" / "sounds" / "music.mp3")

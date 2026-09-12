@@ -14,6 +14,7 @@ not the parrot's).
 """
 
 import math
+from typing import List
 
 import pygame
 
@@ -27,6 +28,7 @@ from src.entity._physics_util import set_damping
 
 class Bird:
     def __init__(self, world: World, x: float, y: float) -> None:
+        self.world = world
         self.radius: float = BIRD["radius"]
         self.mass: float = BIRD["mass"]
 
@@ -67,3 +69,33 @@ class Bird:
         rotated = pygame.transform.rotate(scaled, -math.degrees(self.body.angle))
         rect = rotated.get_rect(center=camera.world_to_screen(self.body.position))
         surface.blit(rotated, rect)
+
+    def split(self) -> List["Bird"]:
+        """Create two new birds with diverging trajectories."""
+        current_pos = self.position
+        current_vel = self.body.velocity
+        speed = current_vel.length()
+
+        # A stationary bird has no direction to split around.
+        if speed == 0:
+            return []
+
+        # Calculate the current movement angle in radians.
+        base_angle = math.atan2(current_vel.y, current_vel.x)
+
+        # Split the trajectory by 15 degrees in either direction.
+        spread_angle = math.radians(15)
+
+        new_birds: List[Bird] = []
+        for delta in (-spread_angle, spread_angle):
+            angle = base_angle + delta
+            # Calculate the new velocity components.
+            vx = speed * math.cos(angle)
+            vy = speed * math.sin(angle)
+
+            # Create each new bird at the current position.
+            child_bird = Bird(self.world, current_pos.x, current_pos.y)
+            child_bird.body.velocity = (vx, vy)
+            new_birds.append(child_bird)
+
+        return new_birds
