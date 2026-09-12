@@ -185,9 +185,7 @@ class PlayState(BaseState):
         self.powerups = [p for p in self.powerups if p.active]
 
         # Check victory
-        if self.brickset.size == 1 and next(
-            (True for _, b in self.brickset.bricks.items() if b.broken), False
-        ):
+        if self.brickset.size == 0:
             self.state_machine.change(
                 "victory",
                 lives=self.lives,
